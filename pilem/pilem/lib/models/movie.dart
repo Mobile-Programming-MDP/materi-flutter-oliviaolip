@@ -6,6 +6,7 @@ class Movie {
   final String backdropPath;
   final String releaseDate;
   final double voteAverage;
+  bool isFavorite;
 
   Movie({
     required this.id,
@@ -15,6 +16,7 @@ class Movie {
     required this.backdropPath,
     required this.releaseDate,
     required this.voteAverage,
+    this.isFavorite = false,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class Movie {
       backdropPath: json['backdrop_path'] ?? '',
       releaseDate: json['release_date'] ?? '',
       voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
+      isFavorite: json['is_favorite'] ?? false,
     );
   }
-  }
+}

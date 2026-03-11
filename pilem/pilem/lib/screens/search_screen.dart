@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:pilem/models/movie.dart';
 import 'package:pilem/screens/detail_screen.dart';
 import 'package:pilem/services/api_services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -13,10 +16,13 @@ class SearchScreenState extends State<SearchScreen> {
   final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
   List<Movie> _searchResults = [];
+  Set<int> _favoriteIds = {};
+
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_searchMovies);
+    _loadFavorites();
   }
 
   @override
@@ -32,11 +38,59 @@ class SearchScreenState extends State<SearchScreen> {
       });
       return;
     }
+
     final List<Map<String, dynamic>> searchData =
         await _apiService.searchMovies(_searchController.text);
     setState(() {
       _searchResults = searchData.map((e) => Movie.fromJson(e)).toList();
+
+      for (var movie in _searchResults) {
+        movie.isFavorite = _favoriteIds.contains(movie.id);
+      }
     });
+  }
+
+  Future<void> _loadFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    final favIds = <int>{};
+
+    for (final key in keys) {
+      if (key.startsWith('movie_')) {
+        final idString = key.replaceFirst('movie_', '');
+        final id = int.tryParse(idString);
+        if (id != null) favIds.add(id);
+      }
+    }
+
+    setState(() {
+      _favoriteIds = favIds;
+
+      for (var movie in _searchResults) {
+        movie.isFavorite = _favoriteIds.contains(movie.id);
+      }
+    });
+  }
+
+  Future<void> _toggleFavorite(Movie movie) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'movie_${movie.id}';
+    final isFav = _favoriteIds.contains(movie.id);
+
+    setState(() {
+      if (isFav) {
+        _favoriteIds.remove(movie.id);
+      } else {
+        _favoriteIds.add(movie.id);
+      }
+      movie.isFavorite = !isFav;
+    });
+
+    if (isFav) {
+      await prefs.remove(key);
+    } else {
+      await prefs.setString(key, json.encode(movie.toJson()));
+    }
   }
 
   @override
@@ -100,13 +154,24 @@ class SearchScreenState extends State<SearchScreen> {
                         fit: BoxFit.cover,
                       ),
                       title: Text(movie.title),
+                      trailing: IconButton(
+                        icon: Icon(
+                          _favoriteIds.contains(movie.id)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: _favoriteIds.contains(movie.id)
+                              ? Colors.red
+                              : null,
+                        ),
+                        onPressed: () => _toggleFavorite(movie),
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => DetailScreen(movie: movie),
                           ),
-                        );
+                        ).then((_) => _loadFavorites());
                       },
                     ),
                   );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pilem/route_observer.dart';
 import 'package:pilem/screens/favorite_screen.dart';
 import 'package:pilem/screens/home_screen.dart';
 import 'package:pilem/screens/search_screen.dart';
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MainScreen(),
+      navigatorObservers: [routeObserver],
     );
   }
 }

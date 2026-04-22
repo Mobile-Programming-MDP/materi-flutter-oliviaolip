@@ -23,20 +23,11 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -50,20 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyA_vW1jNBvcD6zRoq9lf1jQBVxSsZtIpEM',
-    appId: '1:98153141169:web:7fe074049678f87d6fe390',
-    messagingSenderId: '98153141169',
-    projectId: 'first-app-9395e',
-    authDomain: 'first-app-9395e.firebaseapp.com',
-    storageBucket: 'first-app-9395e.firebasestorage.app',
-    measurementId: 'G-S098MH2GK4',
+    apiKey: 'AIzaSyCYZYGLGKF8lUXF05Re3xsyUBKwGFbky4E',
+    appId: '1:710333161203:web:cdd83b0d4b9184199c6186',
+    messagingSenderId: '710333161203',
+    projectId: 'firstproject-68546',
+    authDomain: 'firstproject-68546.firebaseapp.com',
+    storageBucket: 'firstproject-68546.firebasestorage.app',
+    measurementId: 'G-9HTHFE2K36',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyASfRdwjmsplufbeLOfMRQbiYthaR1vfhI',
-    appId: '1:98153141169:android:dbb865eb1c5f01ef6fe390',
-    messagingSenderId: '98153141169',
-    projectId: 'first-app-9395e',
-    storageBucket: 'first-app-9395e.firebasestorage.app',
+    apiKey: 'AIzaSyCNBCUddFQKysKegtueKQsEiMyNecy0OXE',
+    appId: '1:710333161203:android:e061e0f4b4ba3caa9c6186',
+    messagingSenderId: '710333161203',
+    projectId: 'firstproject-68546',
+    storageBucket: 'firstproject-68546.firebasestorage.app',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAaw1wpMT-6J_lRs3dbeYDxnmMfYcb6Lqc',
+    appId: '1:710333161203:ios:119cbee2cd43fcc99c6186',
+    messagingSenderId: '710333161203',
+    projectId: 'firstproject-68546',
+    storageBucket: 'firstproject-68546.firebasestorage.app',
+    iosBundleId: 'com.example.cepuApp',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAaw1wpMT-6J_lRs3dbeYDxnmMfYcb6Lqc',
+    appId: '1:710333161203:ios:119cbee2cd43fcc99c6186',
+    messagingSenderId: '710333161203',
+    projectId: 'firstproject-68546',
+    storageBucket: 'firstproject-68546.firebasestorage.app',
+    iosBundleId: 'com.example.cepuApp',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyCYZYGLGKF8lUXF05Re3xsyUBKwGFbky4E',
+    appId: '1:710333161203:web:f8c4ddf3c4ce9f7e9c6186',
+    messagingSenderId: '710333161203',
+    projectId: 'firstproject-68546',
+    authDomain: 'firstproject-68546.firebaseapp.com',
+    storageBucket: 'firstproject-68546.firebasestorage.app',
+    measurementId: 'G-Z7TXZ1SPDK',
+  );
+
 }

@@ -1,4 +1,5 @@
 import 'package:cepu_app/screens/sign_in_screen.dart';
+import 'package:cepu_app/screens/add_post_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +60,15 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text("Home Screen"),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.logout))],
+        actions: [
+          IconButton(
+            onPressed: () {
+              signOut(context);
+            },
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+          )
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -70,6 +79,18 @@ class _HomeScreenState extends State<HomeScreen> {
             Text("Token: $_idToken"),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddPostScreen(),
+            ),
+          );
+        },
+        tooltip: 'Add Post',
+        child: const Icon(Icons.add),
       ),
     );
   }

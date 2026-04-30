@@ -2,11 +2,9 @@ import 'package:cepu_app/models/post.dart';
 import 'package:cepu_app/screens/detail_screen.dart';
 import 'package:cepu_app/screens/sign_in_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:cepu_app/firebase_options.dart';
 import 'package:cepu_app/screens/add_post_screen.dart';
-import 'package:cepu_app/services/post_service.dart';
+import 'package:cepu_app/services/post_services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -76,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<List<Post>> loadPosts() async {
-    return _postServices.getAllPosts();
+    return _postService.getAllPosts();
   }
 
   String _shorten(String? value, int maxLength) {
@@ -112,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => DetailScreen(postId: post.id)),
+          MaterialPageRoute(builder: (context) => DetailScreen(post: post)),
         );
       },
       child: Card(

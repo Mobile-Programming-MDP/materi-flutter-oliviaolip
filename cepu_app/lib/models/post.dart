@@ -1,3 +1,4 @@
+
 class Post {
   final String id;
   final String image;
@@ -6,10 +7,7 @@ class Post {
   final double latitude;
   final double longitude;
   final String userId;
-  final String userFullName;
-  final String userFullname; // Alias untuk userFullName
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final String userFullname;
 
   Post({
     required this.id,
@@ -19,38 +17,33 @@ class Post {
     required this.latitude,
     required this.longitude,
     required this.userId,
-    required this.userFullName,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }): userFullname = userFullName, createdAt = createdAt ?? DateTime.now(), updatedAt = updatedAt ?? DateTime.now();
+    required this.userFullname,
+  });
 
+  // Convert Firestore document to Post object
+  factory Post.fromMap(Map<String, dynamic> map, String docId) {
+    return Post(
+      id: docId,
+      image: map['image'] ?? '',
+      description: map['description'] ?? '',
+      category: map['category'] ?? '',
+      latitude: map['latitude'] ?? 0.0,
+      longitude: map['longitude'] ?? 0.0,
+      userId: map['userId'] ?? '',
+      userFullname: map['userFullname'] ?? '',
+    );
+  }
+
+  // Convert Post object to Firestore document
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'image': image,
       'description': description,
       'category': category,
       'latitude': latitude,
       'longitude': longitude,
-      'user_id': userId,
-      'user_fullname': userFullName,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'userId': userId,
+      'userFullname': userFullname,
     };
-  }
-
-  factory Post.fromMap(Map<String, dynamic> map, String documentId) {
-    return Post(
-      id: documentId,
-      image: map['image'] ?? '',
-      description: map['description'] ?? '',
-      category: map['category'] ?? '',
-      latitude: map['latitude']?.toDouble() ?? 0.0,
-      longitude: map['longitude']?.toDouble() ?? 0.0,
-      userId: map['user_id'] ?? '',
-      userFullName: map['user_fullname'] ?? '',
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
-      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : DateTime.now(),
-    );
   }
 }

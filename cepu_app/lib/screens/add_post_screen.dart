@@ -7,18 +7,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cepu_app/models/post.dart';
-import 'package:cepu_app/services/post_service.dart';
+import 'package:cepu_app/services/post_services.dart';
 
 class AddPostScreen extends StatefulWidget {
-  final Post? initialPost;
-  const AddPostScreen({super.key, this.initialPost});
+  const AddPostScreen({super.key});
 
   @override
   State<AddPostScreen> createState() => _AddPostScreenState();
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
-  final PostService _postService = PostService();
+
+  final PostServices _postServices = PostServices();
   final ImagePicker _imagePicker = ImagePicker();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
@@ -85,10 +85,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
         latitude: _latitude!,
         longitude: _longitude!,
         userId: currentUser!.uid,
-        userFullName: currentUser.displayName ?? 'Unknown',
+        userFullname: currentUser.displayName ?? 'Unknown',
       );
 
-      await _postService.addPost(post);
+      await _postServices.addPost(post);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

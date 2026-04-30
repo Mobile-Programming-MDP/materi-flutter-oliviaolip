@@ -185,15 +185,16 @@ class _DetailScreenState extends State<DetailScreen> {
 
   void _navigateToEditPost() {
     _postService.getPostById(widget.postId).then((post) {
-      if (post != null) {
+      if (post != null && mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => AddPostScreen(initialPost: post),
           ),
         ).then((_) {
-          // Refresh the page after editing
-          setState(() {});
+          if (mounted) {
+            setState(() {});
+          }
         });
       }
     });
@@ -230,6 +231,7 @@ class _DetailScreenState extends State<DetailScreen> {
   Future<void> _deletePost() async {
     try {
       await _postService.deletePost(widget.postId);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Post deleted successfully')),
       );
@@ -237,6 +239,7 @@ class _DetailScreenState extends State<DetailScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );

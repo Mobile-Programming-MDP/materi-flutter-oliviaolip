@@ -1,95 +1,99 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cepu_app/models/post.dart';
 import 'package:cepu_app/services/post_service.dart';
 
 class AddPostScreen extends StatefulWidget {
   final Post? initialPost;
-
-  const AddPostScreen({
-    super.key,
-    this.initialPost,
-  });
+  const AddPostScreen({super.key, this.initialPost});
 
   @override
   State<AddPostScreen> createState() => _AddPostScreenState();
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _postService = PostService();
+  final PostService _postService = PostService();
+  final ImagePicker _imagePicker = ImagePicker();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _categoryController = TextEditingController();
 
-  late TextEditingController _descriptionController;
-  late TextEditingController _categoryController;
-  late TextEditingController _imageController;
-  late TextEditingController _latitudeController;
-  late TextEditingController _longitudeController;
-
+  XFile? _selectedImage;
+  Uint8List? _selectedImageBytes;
+  double? _latitude;
+  double? _longitude;
   bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _descriptionController =
-        TextEditingController(text: widget.initialPost?.description ?? '');
-    _categoryController =
-        TextEditingController(text: widget.initialPost?.category ?? '');
-    _imageController =
-        TextEditingController(text: widget.initialPost?.image ?? '');
-    _latitudeController = TextEditingController(
-        text: widget.initialPost?.latitude.toString() ?? '');
-    _longitudeController = TextEditingController(
-        text: widget.initialPost?.longitude.toString() ?? '');
+  Future<void> pickImage() async {
+    final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _selectedImage = pickedFile;
+        _selectedImageBytes = bytes;
+      });
+    }
   }
 
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    _categoryController.dispose();
-    _imageController.dispose();
-    _latitudeController.dispose();
-    _longitudeController.dispose();
-    super.dispose();
+  Future<void> getCurrentLocation() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        _latitude = position.latitude;
+        _longitude = position.longitude;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location captured')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
-  Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) {
+  Future<void> submitPost() async {
+    if (_descriptionController.text.isEmpty ||
+        _categoryController.text.isEmpty ||
+        _selectedImage == null ||
+        _latitude == null ||
+        _longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final now = DateTime.now();
+      User? currentUser = FirebaseAuth.instance.currentUser;
+
+      final imageData = 'data:${_selectedImage!.mimeType ?? 'image/png'};base64,${base64Encode(_selectedImageBytes!)}';
       final post = Post(
-        id: widget.initialPost?.id ?? '',
-        image: _imageController.text,
+        id: '',
+        image: imageData,
         description: _descriptionController.text,
         category: _categoryController.text,
-        latitude: double.parse(_latitudeController.text),
-        longitude: double.parse(_longitudeController.text),
-        createdAt: widget.initialPost?.createdAt ?? now,
-        updatedAt: now,
-        userId: widget.initialPost?.userId ?? 'user_id_placeholder',
-        userFullname: widget.initialPost?.userFullname ?? 'User Name',
+        latitude: _latitude!,
+        longitude: _longitude!,
+        userId: currentUser!.uid,
+        userFullName: currentUser.displayName ?? 'Unknown',
       );
 
-      if (widget.initialPost != null) {
-        // Update existing post
-        await _postService.updatePost(widget.initialPost!.id, post);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post updated successfully')),
-        );
-      } else {
-        // Create new post
-        await _postService.createPost(post);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post created successfully')),
-        );
-      }
+      await _postService.addPost(post);
 
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post added successfully')),
+        );
         Navigator.pop(context);
       }
     } catch (e) {
@@ -97,127 +101,87 @@ class _AddPostScreenState extends State<AddPostScreen> {
         SnackBar(content: Text('Error: $e')),
       );
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() => _isLoading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _categoryController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialPost != null ? 'Edit Post' : 'Add New Post'),
+        title: const Text('Add Post'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _imageController,
-                decoration: const InputDecoration(
-                  labelText: 'Image URL',
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter image URL',
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: pickImage,
+              child: Container(
+                width: double.infinity,
+                height: 200,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an image URL';
-                  }
-                  return null;
-                },
+                child: _selectedImage != null && _selectedImageBytes != null
+                    ? Image.memory(_selectedImageBytes!, fit: BoxFit.cover)
+                    : const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.image, size: 50),
+                            SizedBox(height: 8),
+                            Text('Tap to select image'),
+                          ],
+                        ),
+                      ),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter post description',
-                ),
-                maxLines: 4,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
-                  }
-                  return null;
-                },
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _categoryController,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter category',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a category';
-                  }
-                  return null;
-                },
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _categoryController,
+              decoration: const InputDecoration(
+                labelText: 'Category',
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _latitudeController,
-                decoration: const InputDecoration(
-                  labelText: 'Latitude',
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter latitude',
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter latitude';
-                  }
-                  try {
-                    double.parse(value);
-                  } catch (e) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: getCurrentLocation,
+              child: const Text('Get Current Location'),
+            ),
+            const SizedBox(height: 8),
+            if (_latitude != null && _longitude != null)
+              Text('Lat: $_latitude, Lng: $_longitude'),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _isLoading ? null : submitPost,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _longitudeController,
-                decoration: const InputDecoration(
-                  labelText: 'Longitude',
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter longitude',
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter longitude';
-                  }
-                  try {
-                    double.parse(value);
-                  } catch (e) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitForm,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(widget.initialPost != null ? 'Update Post' : 'Create Post'),
-              ),
-            ],
-          ),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Submit Post'),
+            ),
+          ],
         ),
       ),
     );

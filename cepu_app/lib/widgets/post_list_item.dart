@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:cepu_app/models/post.dart';
 import 'package:cepu_app/screens/detail_screen.dart';
-import 'package:cepu_app/services/post_services.dart';
+import 'package:cepu_app/services/post_service.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 

@@ -50,7 +50,7 @@ class PostListItem extends StatelessWidget {
       child: ListTile(
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => DetailPostScreen(post: post)),
+            MaterialPageRoute(builder: (_) => DetailScreen(post: post)),
           );
         },
         leading: post.image != null && post.image!.isNotEmpty

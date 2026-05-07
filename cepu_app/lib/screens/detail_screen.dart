@@ -1,136 +1,140 @@
 import 'dart:convert';
+
+import 'package:cepu_app/models/post.dart';
+import 'package:cepu_app/screens/map_detail_screen.dart';
+import 'package:cepu_app/services/post_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:cepu_app/models/post.dart';
-import 'package:cepu_app/screens/map_detail_screen.dart'; // ✅ tambahan
 
-class DetailPostScreen extends StatelessWidget {
+class DetailScreen extends StatelessWidget {
   final Post post;
 
-  const DetailPostScreen({super.key, required this.post});
+  const DetailScreen({super.key, required this.post});
 
-  // ✅ buka Google Maps
-  Future<void> _openMap() async {
-    final String url =
-        'https://www.google.com/maps/search/?api=1&query=${post.latitude},${post.longitude}';
-
-    final uri = Uri.parse(url);
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      throw 'Could not launch $url';
+  Future<void> _deletePost(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Post'),
+        content: const Text('Are you sure you want to delete this post?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await PostService.deletePost(post);
+      if (context.mounted) Navigator.pop(context);
     }
   }
 
-  // ✅ share
-  Future<void> _sharePost() async {
-    final text = '''
-Post dari ${post.userFullName ?? 'Unknown'}
-
-Kategori: ${post.category ?? '-'}
-
-${post.description ?? '-'}
-
-Lokasi: ${post.latitude}, ${post.longitude}
-''';
-
-    await Share.share(text, subject: 'Cek post ini dari Cepu App!');
+  void _sharePost() {
+    final text =
+        '${post.category ?? ''}\n${post.description ?? ''}\nPosted by: ${post.userFullName ?? ''}';
+    SharePlus.instance.share(ShareParams(text: text));
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    final isOwner = currentUserId != null && post.userId == currentUserId;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Post Detail'),
+        title: Text(post.category ?? 'Post Detail'),
+        actions: [
+          IconButton(
+            onPressed: _sharePost,
+            icon: const Icon(Icons.share),
+            tooltip: 'Share',
+          ),
+          if (isOwner)
+            IconButton(
+              onPressed: () => _deletePost(context),
+              icon: const Icon(Icons.delete),
+              tooltip: 'Delete',
+              color: Colors.red,
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 📸 IMAGE
             if (post.image != null && post.image!.isNotEmpty)
               Image.memory(
                 base64Decode(post.image!),
                 width: double.infinity,
-                height: 300,
+                height: 250,
                 fit: BoxFit.cover,
-              )
-            else
-              Container(
-                width: double.infinity,
-                height: 300,
-                color: Colors.grey,
-                child: const Center(child: Text('No Image')),
+                errorBuilder: (_, __, ___) => const SizedBox(
+                  height: 250,
+                  child: Center(child: Icon(Icons.broken_image, size: 64)),
+                ),
               ),
-
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 👤 USER
+                  if (post.category != null) Chip(label: Text(post.category!)),
+                  const SizedBox(height: 8),
                   Text(
-                    post.userFullName ?? 'Unknown User',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                    post.description ?? '',
+                    style: const TextStyle(fontSize: 16),
                   ),
-
-                  const SizedBox(height: 8),
-
-                  // 🏷️ CATEGORY
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    color: Colors.blue[100],
-                    child: Text(post.category ?? '-'),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Icon(Icons.person, size: 18, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        post.userFullName ?? 'Unknown',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // 📝 DESCRIPTION
-                  Text(post.description ?? '-'),
-
-                  const SizedBox(height: 16),
-
-                  // 📍 LOCATION
-                  Text('Lat: ${post.latitude}'),
-                  Text('Lng: ${post.longitude}'),
-
-                  const SizedBox(height: 16),
-
-                  // 🌍 GOOGLE MAPS
-                  ElevatedButton(
-                    onPressed: _openMap,
-                    child: const Text('Open Map (Google Maps)'),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // 🗺️ MAP APP (FLUTTER MAP)
-                  ElevatedButton(
+                  if (post.latitude != null && post.longitude != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${post.latitude}, ${post.longitude}',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              MapDetailScreen(post: post),
+                          builder: (_) => MapDetailScreen(post: post),
                         ),
                       );
                     },
-                    child: const Text('Lihat di Map App'),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // 🔗 SHARE
-                  ElevatedButton(
-                    onPressed: _sharePost,
-                    child: const Text('Share'),
+                    icon: const Icon(Icons.map),
+                    label: const Text('View on Map'),
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

@@ -1,11 +1,11 @@
+import 'package:cepu_app/models/post.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:cepu_app/models/post.dart';
 
+//install depenencies flutter_map dan latlong2
 class MapDetailScreen extends StatefulWidget {
   final Post post;
-
   const MapDetailScreen({super.key, required this.post});
 
   @override
@@ -13,63 +13,41 @@ class MapDetailScreen extends StatefulWidget {
 }
 
 class _MapDetailScreenState extends State<MapDetailScreen> {
-  late double lat;
-  late double lng;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // ✅ FIX: handle string → double dengan aman
-    lat = double.tryParse(widget.post.latitude ?? '') ?? 0.0;
-    lng = double.tryParse(widget.post.longitude ?? '') ?? 0.0;
-  }
-
   @override
   Widget build(BuildContext context) {
-    // ❗ kalau lokasi kosong
-    if (lat == 0.0 && lng == 0.0) {
-      return Scaffold(
-        appBar: AppBar(title: const Text("Map Detail")),
-        body: const Center(
-          child: Text("Lokasi tidak tersedia"),
-        ),
-      );
-    }
-
+    final lat = double.tryParse(widget.post.latitude ?? '');
+    final lng = double.tryParse(widget.post.longitude ?? '');
+    final hasLocation = lat != null && lng != null;
+    final point = hasLocation ? LatLng(lat, lng) : const LatLng(0, 0);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Map Detail"),
-      ),
-      body: FlutterMap(
-        options: MapOptions(
-          initialCenter: LatLng(lat, lng),
-          initialZoom: 16,
-        ),
-        children: [
-          // 🗺️ Map layer
-          TileLayer(
-            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            userAgentPackageName: 'com.example.cepu_app',
-          ),
-
-          // 📍 Marker
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: LatLng(lat, lng),
-                width: 50,
-                height: 50,
-                child: const Icon(
-                  Icons.location_pin,
-                  color: Colors.red,
-                  size: 40,
+      appBar: AppBar(title: Text(widget.post.category ?? 'Map Detail')),
+      body: hasLocation
+          ? FlutterMap(
+              options: MapOptions(initialCenter: point, initialZoom: 15),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.example.cepu_app',
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: point,
+                      width: 48,
+                      height: 48,
+                      child: const Icon(
+                        Icons.location_pin,
+                        color: Colors.red,
+                        size: 48,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          : const Center(
+              child: Text('No location data available for this post.'),
+            ),
     );
   }
 }

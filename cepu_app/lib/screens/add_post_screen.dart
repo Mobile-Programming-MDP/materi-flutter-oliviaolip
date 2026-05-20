@@ -1,12 +1,12 @@
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
 import 'package:cepu_app/models/post.dart';
 import 'package:cepu_app/services/post_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
@@ -263,27 +263,42 @@ class _AddPostScreenState extends State<AddPostScreen> {
         final jsonResponse = jsonDecode(response.body);
         final text =
             jsonResponse['candidates'][0]['content']['parts'][0]['text'];
-        print("AI TEXT: $text");
+        debugPrint("AI RESPONSE: $text");
+        
         if (text != null && text.isNotEmpty) {
-          final lines = text.trim().split('\n');
           String? aicategory;
           String? aidescription;
-          for (var line in lines) {
-            final lower = line.toLowerCase();
-            if (lower.startsWith('kategori:')) {
-              aicategory = line.substring(9).trim();
-            } else if (lower.startsWith('deskripsi:')) {
-              aidescription = line.substring(11).trim();
-            }
+          
+          // Parse kategori - ambil teks setelah "Kategori:"
+          if (text.toLowerCase().contains('kategori:')) {
+            final kategoriPart = text.split(RegExp(r'kategori:', caseSensitive: false))[1];
+            aicategory = kategoriPart.split('\n')[0].trim();
+            debugPrint("Parsed Category: $aicategory");
           }
-          aidescription ??= text.trim();
+          
+          // Parse deskripsi - ambil semua teks setelah "Deskripsi:"
+          if (text.toLowerCase().contains('deskripsi:')) {
+            final deskripsiPart = text.split(RegExp(r'deskripsi:', caseSensitive: false))[1];
+            aidescription = deskripsiPart.trim();
+            debugPrint("Parsed Description: $aidescription");
+          }
+          
+          // Fallback jika parsing gagal
+          if (aidescription == null || aidescription.isEmpty) {
+            aidescription = text;
+          }
+          
+          debugPrint("Final Category: $aicategory, Final Description: $aidescription");
+          
           setState(() {
-            _category = aicategory ?? 'Tidak diketahui';
+            if (aicategory != null && aicategory.isNotEmpty) {
+              _category = aicategory;
+            }
             _descriptionController.text = aidescription!;
           });
         }
       } else {
-        debugPrint('Request failed: ${response.body}');
+        debugPrint('Request failed: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       debugPrint('Failed to generate AI description: $e');

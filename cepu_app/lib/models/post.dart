@@ -27,31 +27,32 @@ class Post {
 
   factory Post.fromDocument(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
     return Post(
       id: doc.id,
-      image: doc['image'],
-      description: data['description'],
-      category: data['category'],
-      createdAt: data['created_at'] as Timestamp,
-      updatedAt: data['updated_at'] as Timestamp,
-      latitude: data['latitude'],
-      longitude: data['longitude'],
-      userId: data['user_id'],
-      userFullName: data['user_full_name'],
+      image: data['image'] ?? '',
+      description: data['description'] ?? '',
+      category: data['category'] ?? '',
+      createdAt: data['created_at'],
+      updatedAt: data['updated_at'],
+      latitude: data['latitude'] ?? '',
+      longitude: data['longitude'] ?? '',
+      userId: data['user_id'] ?? '',
+      userFullName: data['user_full_name'] ?? '',
     );
   }
 
   Map<String, dynamic> toDocument() {
     return {
-      'image': image,
-      'description': description,
-      'category': category,
-      'latitude': latitude,
-      'longitude': longitude,
+      'image': image ?? '',
+      'description': description ?? '',
+      'category': category ?? '',
+      'latitude': latitude ?? '',
+      'longitude': longitude ?? '',
       'created_at': createdAt,
       'updated_at': updatedAt,
-      'user_id': userId,
-      'user_full_name': userFullName,
+      'user_id': userId ?? '',
+      'user_full_name': userFullName ?? '',
     };
   }
 }

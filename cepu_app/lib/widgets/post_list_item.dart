@@ -39,7 +39,7 @@ class PostListItem extends StatelessWidget {
   //flutter pub add share_plus
   void _sharePost() {
     final text =
-        '${post.category ?? ''}\n${post.description ?? ''}\nPosted by: ${post.userFullName ?? ''}';
+        '${post.category ?? ''}\n${post.description ?? ''}\nPosted by: ${post.fullName ?? ''}';
     SharePlus.instance.share(ShareParams(text: text));
   }
 
@@ -80,7 +80,7 @@ class PostListItem extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              post.userFullName ?? '',
+              post.fullName ?? '',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],

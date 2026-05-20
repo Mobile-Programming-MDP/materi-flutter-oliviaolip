@@ -38,7 +38,7 @@ class DetailScreen extends StatelessWidget {
 
   void _sharePost() {
     final text =
-        '${post.category ?? ''}\n${post.description ?? ''}\nPosted by: ${post.userFullName ?? ''}';
+        '${post.category ?? ''}\n${post.description ?? ''}\nPosted by: ${post.fullName ?? ''}';
     SharePlus.instance.share(ShareParams(text: text));
   }
 
@@ -85,7 +85,8 @@ class DetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (post.category != null) Chip(label: Text(post.category!)),
+                  if (post.category != null)
+                    Chip(label: Text(post.category!)),
                   const SizedBox(height: 8),
                   Text(
                     post.description ?? '',
@@ -97,7 +98,7 @@ class DetailScreen extends StatelessWidget {
                       const Icon(Icons.person, size: 18, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        post.userFullName ?? 'Unknown',
+                        post.fullName ?? 'Unknown',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -118,20 +119,20 @@ class DetailScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MapDetailScreen(post: post),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.map),
+                      label: const Text('View on Map'),
+                    ),
                   ],
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MapDetailScreen(post: post),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.map),
-                    label: const Text('View on Map'),
-                  ),
                 ],
               ),
             ),

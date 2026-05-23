@@ -22,7 +22,7 @@ class Post {
     this.latitude,
     this.longitude,
     this.userId,
-    this.fullName
+    this.fullName, String? userFullName
   });
 
   factory Post.fromDocument(DocumentSnapshot doc)
